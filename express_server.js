@@ -1,30 +1,23 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-// const cookieParser = require('cookie-parser') 
 const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session');
 
-
-// const {
-//   generateRandomString, 
-//   emailVerify,
-//   passwordVerify,
-//   getUserId,
-//   urlsForUser
-// } = require('./helpers')
 
 app.use(cookieSession({
   name: 'session',
   keys: ['hello', 'there'],
 
-  // Cookie Options
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+// Cookie Options
+
+maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
 
 // app.use(cookieParser())
 
 app.set("view engine", "ejs");
+
 
 const urlDatabase = {
   "b2xVn2": { longUrl: "http://www.lighthouselabs.ca", userID: "aJ48lW" }, 
@@ -44,9 +37,6 @@ const users = {
     password: "dishwasher-funk"
   }
 };
-
-// module.exports = {urlDatabase, users} 
-
 
 
 const bodyParser = require("body-parser");
@@ -70,7 +60,6 @@ app.get("/hello", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   if (req.session.user_id) { 
-  // //if (req.cookies['user_id']) {
 
   const user = users[req.session.user_id]
   let username = null
@@ -92,8 +81,6 @@ app.get("/urls", (req, res) => {
     username =  user.email
   }
   let templateVars = { urls: urlsForUser(req.session.user_id), username };
-  //urlsForUser('userRandomID')
-  //(req.cookies['user_id'])
   res.render("urls_index", templateVars);
 });
 
@@ -108,7 +95,6 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
   var shorturl = generateRandomString()
   const newUrl = {
     longUrl: req.body.longURL,
@@ -119,7 +105,8 @@ app.post("/urls", (req, res) => {
 });
   
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL]
+  console.log(urlDatabase)
+  const longURL = urlDatabase[req.params.shortURL].longUrl
   res.redirect(longURL);
 });
 
@@ -131,32 +118,23 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 }); 
 
 app.post("/urls/:shortURL", (req, res) => { 
-  urlDatabase[req.params.shortURL] = req.body.longURL;
-  // if (req.cookies['user_id']) {
-  // res.redirect(`/urls/url`);
-  // }
-  // else {
-     res.redirect('/urls') 
-   
-  });
-
-// app.post("/login", (req, res) => { 
-//   const username = req.body.username 
-//   console.log("body",req.body)
-//   res.cookie('user_id', username)
-//   res.redirect('/urls')
-// });
+  if (req.session.user_id === urlDatabase[req.params.shortURL].userID) {
+    urlDatabase[req.params.shortURL].longUrl = req.body.longURL;
+    res.redirect('/urls') 
+}
+  else { 
+    res.status(400);
+    res.send('Not Your URL !')
+  }
+     });
 
 app.post("/logout", (req,res) => { 
-  //const username = req.body.username
   req.session = null
-  //res.clearcookie("user_id", username)
   res.redirect('/urls')
 }); 
 
 app.get("/register", (req, res) => {
   let templateVars = {username: null }
-  // let templateVars = {username: req.session.user_id }
   res.render("register", templateVars)
 }); 
 
@@ -166,19 +144,21 @@ app.post("/register", (req, res) => {
   //if email or password empty return error 400
   if (req.body.email === ""){
     res.status(400);
-    res.send('Error 400');  
+    res.send('Please Input Email !');  
   }  
+  else if (req.body.password === "") {
+    res.status(400);
+    res.send("Please Input Password !")
+  }
   // if email already in use return error 400
   else if (emailVerify(req.body.email) === true) {
     res.status(400);
-    res.send('Error 403');
+    res.send('Email already in use !');
   }
   //set cookie w that user id
   else {
   users[userId] = {id: userId, email: req.body.email, password: bcrypt.hashSync(req.body.password, 10)}
   req.session.user_id = userId
-  //res.cookie('user_id', userId) 
-  //res.cookie('password', password) 
   res.redirect("/urls")
   }
 }); 
@@ -191,7 +171,7 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   if (emailVerify(req.body.email) === false) {
     res.status(400);
-    res.send('Error 403');
+    res.send('Invalid Email !');
 }
 
   else if (emailVerify(req.body.email) === true) {
@@ -200,7 +180,6 @@ app.post("/login", (req, res) => {
     if (passwordVerify(bcrypt.hashSync(req.body.password, 10)) === true) {
       var userId = getUserId(req.body.email)
       req.session.user_id = userId
-      //res.cookie("user_id", userId)
       res.redirect("/urls")
     }
   }
@@ -230,7 +209,6 @@ function emailVerify(email) {
 function passwordVerify(password){
   for (user in users){
     if(bcrypt.compareSync) {
-    //if(users[user].password === password){
       return true
     }
   }
@@ -240,7 +218,6 @@ function passwordVerify(password){
 
 function getUserId(email) { 
   for (userId in users) {
-    //  console.log(users[userId].email)
     if(users[userId].email === email) {
       return users[userId].id
     }    
