@@ -14,7 +14,6 @@ app.use(cookieSession({
 maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
 
-// app.use(cookieParser())
 
 app.set("view engine", "ejs");
 
@@ -46,10 +45,6 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
@@ -60,16 +55,16 @@ app.get("/hello", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   if (req.session.user_id) { 
-
-  const user = users[req.session.user_id]
-  let username = null
-  if (user) {
-    username =  user.email
+    
+    const user = users[req.session.user_id]
+    let username = null
+    if (user) {
+      username =  user.email
+    }
+    let templateVars = {username}
+    res.render("urls_new", templateVars);
   }
-  let templateVars = {username}
-  res.render("urls_new", templateVars);
- }
-else { res.redirect('/login')
+  else { res.redirect('/login')
 }
 });
 
@@ -84,14 +79,18 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+//Cannot go into short URL unless it's yours !
 app.get("/urls/:shortURL", (req, res) => {
   const user = users[req.session.user_id]
   let username = null
-  if (user) {
+  if (user && user.id === urlDatabase[req.params.shortURL].userID) {
     username =  user.email
+    let templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL, username};
+    res.render("urls_show", templateVars);
   }
-  let templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL, username};
-  res.render("urls_show", templateVars);
+  else {res.status(400);
+    res.send('Not your URL')
+  }
 });
 
 app.post("/urls", (req, res) => {
@@ -103,17 +102,17 @@ app.post("/urls", (req, res) => {
   urlDatabase[shorturl] = newUrl
   res.redirect(`/urls/${shorturl}`);        
 });
-  
+
 app.get("/u/:shortURL", (req, res) => {
-  console.log(urlDatabase)
+  console.log(req.params.shortURL )
   const longURL = urlDatabase[req.params.shortURL].longUrl
   res.redirect(longURL);
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (req.session.user_id){
-  delete urlDatabase[req.params.shortURL];
-  res.redirect(`/urls`); 
+    delete urlDatabase[req.params.shortURL];
+    res.redirect(`/urls`); 
   }
 }); 
 
@@ -121,12 +120,12 @@ app.post("/urls/:shortURL", (req, res) => {
   if (req.session.user_id === urlDatabase[req.params.shortURL].userID) {
     urlDatabase[req.params.shortURL].longUrl = req.body.longURL;
     res.redirect('/urls') 
-}
+  }
   else { 
     res.status(400);
     res.send('Not Your URL !')
   }
-     });
+});
 
 app.post("/logout", (req,res) => { 
   req.session = null
@@ -157,9 +156,9 @@ app.post("/register", (req, res) => {
   }
   //set cookie w that user id
   else {
-  users[userId] = {id: userId, email: req.body.email, password: bcrypt.hashSync(req.body.password, 10)}
-  req.session.user_id = userId
-  res.redirect("/urls")
+    users[userId] = {id: userId, email: req.body.email, password: bcrypt.hashSync(req.body.password, 10)}
+    req.session.user_id = userId
+    res.redirect("/urls")
   }
 }); 
 
@@ -172,11 +171,11 @@ app.post("/login", (req, res) => {
   if (emailVerify(req.body.email) === false) {
     res.status(400);
     res.send('Invalid Email !');
-}
-
+  }
+  
   else if (emailVerify(req.body.email) === true) {
     var hash = bcrypt.hashSync('password', 10);
-
+    
     if (passwordVerify(bcrypt.hashSync(req.body.password, 10)) === true) {
       var userId = getUserId(req.body.email)
       req.session.user_id = userId
@@ -186,7 +185,7 @@ app.post("/login", (req, res) => {
 });
 
 
-
+// generates a random alphanumerical string of 6 characters
 function generateRandomString() {
   var text = "";
   var charset = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -196,16 +195,17 @@ function generateRandomString() {
   return text;
 }
 
-
+// Verifies your email 
 function emailVerify(email) { 
   for (user in users) {
     if(users[user].email === email){
       return true
     }    
   }
-   return false 
+  return false 
 } 
 
+// Verifies your password
 function passwordVerify(password){
   for (user in users){
     if(bcrypt.compareSync) {
@@ -215,16 +215,17 @@ function passwordVerify(password){
   return false 
 }
 
-
+// Gets the user ID 
 function getUserId(email) { 
   for (userId in users) {
     if(users[userId].email === email) {
       return users[userId].id
     }    
   }
-   return false 
+  return false 
 }
 
+//Gets the URL's for this user 
 function urlsForUser(userId) { 
   const output = {}
   for (let shortURL in urlDatabase) {
@@ -238,3 +239,7 @@ function urlsForUser(userId) {
 };
 
 
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
