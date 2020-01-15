@@ -1,10 +1,9 @@
-# TinyApp Project
+# TinyApp 
 
-**This website allows you to create a shortURL out of a longURL & share it !
+TinyApp is a fullstack web application that allows users to shorten long URL's from their desired website, including a edit feature in order to give it your desired name and use it at your desire. This app also includes a Register/Login feature in order for you to edit/modify/delete your personnal shortened URL's.  
 
-**Includes Login/Logout page allowing you to personnalise your shortURL's  
 
-TinyApp is a full stack web application built with Node and Express that allows users to shorten long URLs (à la bit.ly).
+**This fullstack web app has been built using Node.js and Express.js 
 
 ## Final Product
 
