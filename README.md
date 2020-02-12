@@ -2,7 +2,6 @@
 
 TinyApp is a fullstack web application that allows users to shorten long URL's from their desired website, including a edit feature in order to give it your desired name and use it at your desire. This app also includes a Register/Login feature in order for you to edit/modify/delete your personnal shortened URL's.  
 
-
 **This fullstack web app has been built using Node.js and Express.js 
 
 ## Final Product
