@@ -10,7 +10,6 @@ TinyApp is a fullstack web application that allows users to shorten long URL's f
 ![Screenshot_2019-11-06_15-02-33](https://user-images.githubusercontent.com/53335999/68339334-652f5180-00b2-11ea-9c14-1b33d0b74395.png)
 ![Screenshot_2019-11-06_15-02-42](https://user-images.githubusercontent.com/53335999/68339363-724c4080-00b2-11ea-938c-9f0ca908bcce.png)
 
-
 ## Dependencies
 
 - Node.js
